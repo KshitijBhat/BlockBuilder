@@ -1,12 +1,12 @@
 import os
 import logging
 import argparse
+import yaml
 from time import sleep
 
 import numpy as np
 
 from autolab_core import RigidTransform, YamlConfig
-from visualization import Visualizer3D as vis3d
 
 from perception_utils.apriltags import AprilTagDetector
 from perception_utils.realsense import get_first_realsense_sensor
@@ -36,7 +36,7 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
     grasp_y_axis = np.cross(grasp_z_axis, grasp_x_axis)
     grasp_R = make_det_one(np.c_[grasp_x_axis, grasp_y_axis, grasp_z_axis])
     # Adjust cube size to match
-    cube_size = .02
+    cube_size = .05
     grasp_translation = T_tag_world.translation + np.array([0, 0, -cube_size / 2])
     return RigidTransform(
         rotation=grasp_R,
@@ -55,10 +55,10 @@ def perform_pick(arm, grasp_pose, lift_pose):
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', '-c', type=str, default='cfg/april_tag_pick_place_cfg.yaml')
+    parser.add_argument('--cfg', '-c', type=str, default='cfg.yaml')
     parser.add_argument('--no_grasp', '-ng', action='store_true')
     args = parser.parse_args()
-    cfg = YamlConfig(args.cfg)
+    cfg = yaml.load(open(args.cfg))
     T_camera_ee = RigidTransform.load(cfg['T_camera_ee_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_camera_mount_path'])
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     logging.info('Detecting Color Blocks')
     # Replace this with perception code for "ColorBlockDetector"
-    april = AprilTagDetector(cfg['april_tag'])
+    # april = AprilTagDetector(cfg['april_tag'])
     intr = sensor.color_intrinsics
 
     wall_configuration = [
@@ -107,12 +107,19 @@ if __name__ == "__main__":
 
     while len(wall_configuration) > 0:
         row_configuration = wall_configuration.pop()
+        logging.info(f'Row configuration: {row_configuration}')
         while len(row_configuration) > 0:
             color_block_to_find = row_configuration.pop()
             # Get all blocks
             # T_blocks_camera = color_blocks.detect(sensor, intr, vis=cfg['vis_detect'])
-            # T_block_camera = T_blocks_camera[color_block_to_find]
-            T_tag_camera = april.detect(sensor, intr, vis=cfg['vis_detect'])[0]
+            # {"red": [], "blue": []}
+            # T_block_camera = T_blocks_camera[color_block_to_find][0]
+            # T_tag_camera = april.detect(sensor, intr, vis=cfg['vis_detect'])[0]
+            T_tag_camera = RigidTransform(
+                translation=[-0.2, 0, .2],
+                from_frame='tag',
+                to_frame='realsense'
+            )
 
             # Calc translation for block
             T_camera_world = T_ready_world * T_camera_ee
@@ -126,30 +133,22 @@ if __name__ == "__main__":
             # T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
             T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # Pose closer to grasp pose
-            T_lift = RigidTransform(translation=[0, 0, 0.2], from_frame=T_ready_world.to_frame, to_frame=T_ready_world.to_frame)
+            T_lift = RigidTransform(translation=[0, 0, 0.05], from_frame=T_ready_world.to_frame, to_frame=T_ready_world.to_frame)
             T_lift_world = T_lift * T_grasp_world
 
             logging.info('Visualizing poses')
-            _, depth_im, _ = sensor.frames()
-            points_world = T_camera_world * intr.deproject(depth_im)
-
-            if cfg['vis_detect']:
-                vis3d.figure()
-                vis3d.pose(RigidTransform())
-                vis3d.points(subsample(points_world.data.T), color=(0,1,0), scale=0.002)
-                vis3d.pose(T_ready_world)
-                vis3d.pose(T_camera_world)
-                vis3d.pose(T_tag_world)
-                vis3d.pose(T_grasp_world)
-                vis3d.pose(T_lift_world)
-                vis3d.show()
+            #_, depth_im, _ = sensor.frames()
+            #points_world = T_camera_world * intr.deproject(depth_im)
 
             if not args.no_grasp:
                 logging.info('Commanding robot')
                 perform_pick(fa, T_grasp_world, T_lift_world)
-                sleep(3)
-                fa.goto_pose(T_grasp_world, use_impedance=False)
+                sleep(1)
+                fa.goto_pose(T_ready_world, use_impedance=False)
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
+
+            # This is to avoid the Franka doing the same thing each time while we work on perception
+            exit(0)
 
     import IPython; IPython.embed(); exit(0)
