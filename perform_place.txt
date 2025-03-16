@@ -17,4 +17,4 @@ def perform_place(fa, place_pose, lift_pose):
 
 count = 0 # counter for what block we're placing in a given row
 place_pose = calculate_pose(fa, count, init_place_pose)
-perform_place(fa, place_pose, lift_pose)
+perform_place(fa, place_pose, T_lift_world)
