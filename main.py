@@ -1,15 +1,17 @@
+
 import os
 import logging
 import argparse
 import yaml
+import json
 from time import sleep
 
 import numpy as np
 
 from autolab_core import RigidTransform, YamlConfig
 
-from perception_utils.apriltags import AprilTagDetector
-from perception_utils.realsense import get_first_realsense_sensor
+# from perception_utils.apriltags import AprilTagDetector
+# from perception_utils.realsense import get_first_realsense_sensor
 
 from frankapy import FrankaArm
 
@@ -46,11 +48,26 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
 
 
 def perform_pick(arm, grasp_pose, lift_pose):
-    fa.gotogripper(0.04)
+    fa.goto_gripper(0.04)
     fa.goto_pose(T_lift_world, use_impedance=False)
     fa.goto_pose(T_grasp_world, use_impedance=False)
     fa.close_gripper()
     fa.goto_pose(T_lift_world, use_impedance=False)
+
+init_place_pose = [[-0.11705924,  0.99311342,  0.00190074,  0.6096255],
+   [ 0.9905303,   0.11661634,  0.07232698, 0.1271784],
+   [ 0.07160724,  0.01034928, -0.99737916, 0.02008005],
+   [0, 0, 0, 1]]
+
+def calculate_pose(fa, count, init_place_pose):
+    place_pose = init_place_pose
+    place_pose[0][3] = place_pose[0][3] + count*0.03
+    return place_pose
+
+def perform_place(fa, place_pose, lift_pose):
+    fa.goto_pose(place_pose, use_impedance = False)
+    fa.open_gripper()
+    fa.goto_pose(lift_pose, use_impedance = False)
 
 
 if __name__ == "__main__":
@@ -62,6 +79,7 @@ if __name__ == "__main__":
     cfg = yaml.load(open(args.cfg))
     T_camera_ee = RigidTransform.load(cfg['T_camera_ee_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_camera_mount_path'])
+    blocks = json.load(open('blocks.json'))
 
     # Init the arm
     logging.info('Starting robot')
@@ -79,14 +97,14 @@ if __name__ == "__main__":
     fa.goto_pose(T_ready_world)
 
     # Init the camera
-    logging.info('Init camera')
-    sensor = get_first_realsense_sensor(cfg['rs'])
-    sensor.start()
+    # logging.info('Init camera')
+    # sensor = get_first_realsense_sensor(cfg['rs'])
+    # sensor.start()
 
-    logging.info('Detecting Color Blocks')
+    # logging.info('Detecting Color Blocks')
     # Replace this with perception code for "ColorBlockDetector"
     # april = AprilTagDetector(cfg['april_tag'])
-    intr = sensor.color_intrinsics
+    # intr = sensor.color_intrinsics
 
     wall_configuration = [
         [
@@ -95,13 +113,6 @@ if __name__ == "__main__":
             "blue",
             "green",
             "yellow"
-        ],
-        [
-            "purple",
-            "yellow",
-            "yellow",
-            "yellow",
-            "purple"
         ]
     ]
 
@@ -128,23 +139,27 @@ if __name__ == "__main__":
             # TODO: There's no need to adjust the pose given by camera,
             #  grasp function performs that calculation using the block size
             # T_tag_camera = april.detect(sensor, intr, vis=cfg['vis_detect'])[0]
-            T_tag_camera = RigidTransform(
-                translation=[0, 0, 0.0127],
-                from_frame='tag',
-                to_frame='realsense'
-            )
+            #T_tag_camera = RigidTransform(
+            #    translation=[0, 0, 0.0127],
+            #    from_frame='tag',
+            #    to_frame='realsense'
+            #)
 
             # Calc translation for block
-            T_camera_world = T_ready_world * T_camera_ee
+            #T_camera_world = T_ready_world * T_camera_ee
             # T_block_world = T_camera_world * T_block_camera
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
-            T_tag_world = T_camera_world * T_tag_camera
-            logging.info('Tag has translation {}'.format(T_tag_world.translation))
+            #T_tag_world = T_camera_world * T_tag_camera
+            block_pose = blocks.pop()
+            # logging.info('Tag has translation {}'.format(T_tag_world.translation))
 
-            logging.info('Finding closest orthogonal grasp')
+            # logging.info('Finding closest orthogonal grasp')
             # Get grasp pose
             # T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
-            T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
+            # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
+            # print(T_grasp_world)
+            print(T_ready_world)
+            T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"], from_frame="franka_tool", to_frame="world")
             # Pose closer to grasp pose
             T_lift = RigidTransform(translation=[0, 0, 0.05], from_frame=T_ready_world.to_frame, to_frame=T_ready_world.to_frame)
             T_lift_world = T_lift * T_grasp_world
@@ -160,6 +175,10 @@ if __name__ == "__main__":
                 fa.goto_pose(T_ready_world, use_impedance=False)
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
+                count = 0 # counter for what block we're placing in a given row
+                place_pose = calculate_pose(fa, count, init_place_pose)
+                perform_place(fa, place_pose, T_lift_world)
+                count += 1
 
             # This is to avoid the Franka doing the same thing each time while we work on perception
             exit(0)
