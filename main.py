@@ -53,13 +53,6 @@ def perform_pick(arm, grasp_pose, lift_pose):
     fa.close_gripper()
     fa.goto_pose(T_lift_world, use_impedance=False)
 
-# init_place_pose = RigidTransform(
-#             translation = [0.6096255, 0.1271784, 0.02008005],
-#             rotation = [[-0.11705924,  0.99311342,  0.00190074],
-#             [ 0.9905303,   0.11661634,  0.07232698],
-#             [ 0.07160724,  0.01034928, -0.99737916]],
-#             from_frame="block",
-#             to_frame="realsense")
 
 def calculate_pose(fa, count):
     place_pose = RigidTransform(
@@ -87,6 +80,7 @@ if __name__ == "__main__":
     T_camera_ee = RigidTransform.load(cfg['T_camera_ee_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_camera_mount_path'])
     blocks = json.load(open('blocks.json'))
+    count = 0 # identifies which block we're placing in a given row
 
     # Init the arm
     logging.info('Starting robot')
@@ -181,7 +175,6 @@ if __name__ == "__main__":
                 fa.goto_pose(T_ready_world)
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
-                count = 0 # counter for what block we're placing in a given row
                 place_pose = calculate_pose(fa, count)
                 perform_place(fa, place_pose, T_lift_world)
                 fa.goto_pose(T_ready_world)
