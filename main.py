@@ -36,7 +36,7 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
     grasp_y_axis = np.cross(grasp_z_axis, grasp_x_axis)
     grasp_R = make_det_one(np.c_[grasp_x_axis, grasp_y_axis, grasp_z_axis])
     # Adjust cube size to match
-    cube_size = .05
+    cube_size = .0254
     grasp_translation = T_tag_world.translation + np.array([0, 0, -cube_size / 2])
     return RigidTransform(
         rotation=grasp_R,
@@ -46,6 +46,7 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
 
 
 def perform_pick(arm, grasp_pose, lift_pose):
+    fa.gotogripper(0.04)
     fa.goto_pose(T_lift_world, use_impedance=False)
     fa.goto_pose(T_grasp_world, use_impedance=False)
     fa.close_gripper()
@@ -112,11 +113,23 @@ if __name__ == "__main__":
             color_block_to_find = row_configuration.pop()
             # Get all blocks
             # T_blocks_camera = color_blocks.detect(sensor, intr, vis=cfg['vis_detect'])
-            # {"red": [], "blue": []}
-            # T_block_camera = T_blocks_camera[color_block_to_find][0]
+            # {"red": [
+            # {
+            #   "rotation": [],
+            #   "translation": []
+            # }
+            # ], "blue": []}
+            # block_pose = T_blocks_camera[color_block_to_find][0]
+            # T_block_camera = RigidTransform(
+            #   translation=block_pose["translation"],
+            #   rotation=block_pose["rotation"],
+            #   from_frame="block",
+            #   to_frame="realsense")
+            # TODO: There's no need to adjust the pose given by camera,
+            #  grasp function performs that calculation using the block size
             # T_tag_camera = april.detect(sensor, intr, vis=cfg['vis_detect'])[0]
             T_tag_camera = RigidTransform(
-                translation=[-0.2, 0, .2],
+                translation=[0, 0, 0.0127],
                 from_frame='tag',
                 to_frame='realsense'
             )
