@@ -178,13 +178,13 @@ if __name__ == "__main__":
             if not args.no_grasp:
                 logging.info('Commanding robot')
                 perform_pick(fa, T_grasp_world, T_lift_world)
-                sleep(1)
-                fa.goto_pose(T_ready_world, use_impedance=False)
+                fa.goto_pose(T_ready_world)
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
                 count = 0 # counter for what block we're placing in a given row
                 place_pose = calculate_pose(fa, count)
                 perform_place(fa, place_pose, T_lift_world)
+                fa.goto_pose(T_ready_world)
                 count += 1
 
     import IPython; IPython.embed(); exit(0)
