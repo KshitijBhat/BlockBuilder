@@ -65,9 +65,9 @@ def calculate_pose(fa, count):
     return place_pose
 
 def perform_place(fa, place_pose, lift_pose):
-    fa.goto_pose(place_pose, use_impedance = False)
+    fa.goto_pose(place_pose)
     fa.open_gripper()
-    fa.goto_pose(lift_pose, use_impedance = False)
+    fa.goto_pose(lift_pose)
 
 
 if __name__ == "__main__":
