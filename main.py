@@ -63,7 +63,7 @@ def perform_pick(arm, grasp_pose, lift_pose):
 
 def calculate_pose(fa, count):
     place_pose = RigidTransform(
-            translation = [0.6096255 + count*0.03, 0.1271784, 0.01008005],
+            translation = [0.6096255 + count*0.08, 0.1271784, 0.00008005],
             rotation = [[-0.11705924,  0.99311342,  0.00190074],
             [ 0.9905303,   0.11661634,  0.07232698],
             [ 0.07160724,  0.01034928, -0.99737916]],
