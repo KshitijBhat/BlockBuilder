@@ -56,10 +56,10 @@ def perform_pick(arm, grasp_pose, lift_pose):
 
 def calculate_pose(fa, count):
     place_pose = RigidTransform(
-            translation = [0.6096255 + count*0.08, 0.1271784, 0.00008],
-            rotation = [[-0.11705924,  0.99311342,  0.00190074],
-            [ 0.9905303,   0.11661634,  0.07232698],
-            [ 0.07160724,  0.01034928, -0.99737916]],
+            translation = [0.572 + count*0.08, 0.228, 0.009],
+            rotation = [[-0.017,  0.1,  0.022],
+            [ 0.998,   0.016,  0.057],
+            [ 0.057,  0.023, -0.998]],
             from_frame="franka_tool",
             to_frame="world")
     return place_pose
