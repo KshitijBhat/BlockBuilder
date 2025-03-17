@@ -180,4 +180,4 @@ if __name__ == "__main__":
                 fa.goto_pose(T_ready_world)
                 count += 1
 
-    import IPython; IPython.embed(); exit(0)
+    exit(0)
