@@ -87,6 +87,7 @@ if __name__ == "__main__":
     T_camera_ee = RigidTransform.load(cfg['T_camera_ee_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_camera_mount_path'])
     blocks = json.load(open('blocks.json'))
+    count = 0 # identifies which block we're placing in a given row
 
     # Init the arm
     logging.info('Starting robot')
@@ -181,7 +182,6 @@ if __name__ == "__main__":
                 fa.goto_pose(T_ready_world)
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
-                count = 0 # counter for what block we're placing in a given row
                 place_pose = calculate_pose(fa, count)
                 perform_place(fa, place_pose, T_lift_world)
                 fa.goto_pose(T_ready_world)
