@@ -52,6 +52,21 @@ def perform_pick(arm, grasp_pose, lift_pose):
     fa.close_gripper()
     fa.goto_pose(T_lift_world, use_impedance=False)
 
+init_place_pose = [[-0.11705924,  0.99311342,  0.00190074,  0.6096255],
+   [ 0.9905303,   0.11661634,  0.07232698, 0.1271784],
+   [ 0.07160724,  0.01034928, -0.99737916, 0.02008005], 
+   [0, 0, 0, 1]]
+
+def calculate_pose(fa, count, init_place_pose):
+    place_pose = init_place_pose
+    place_pose[0][3] = place_pose[0][3] + count*0.03
+    return place_pose
+
+def perform_place(fa, place_pose, lift_pose):
+    fa.goto_pose(place_pose, use_impedance = False)
+    fa.open_gripper()
+    fa.goto_pose(lift_pose, use_impedance = False)
+
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -160,6 +175,10 @@ if __name__ == "__main__":
                 fa.goto_pose(T_ready_world, use_impedance=False)
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
+                count = 0 # counter for what block we're placing in a given row
+                place_pose = calculate_pose(fa, count, init_place_pose)
+                perform_place(fa, place_pose, T_lift_world)
+                count += 1
 
             # This is to avoid the Franka doing the same thing each time while we work on perception
             exit(0)
