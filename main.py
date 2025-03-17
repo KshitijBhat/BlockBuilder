@@ -52,13 +52,13 @@ def perform_pick(arm, grasp_pose, lift_pose):
     fa.close_gripper()
     fa.goto_pose(T_lift_world, use_impedance=False)
 
-init_place_pose = RigidTransform(
-            translation = [0.6096255, 0.1271784, 0.02008005],
-            rotation = [[-0.11705924,  0.99311342,  0.00190074],
-            [ 0.9905303,   0.11661634,  0.07232698],
-            [ 0.07160724,  0.01034928, -0.99737916]],
-            from_frame="block",
-            to_frame="realsense")
+# init_place_pose = RigidTransform(
+#             translation = [0.6096255, 0.1271784, 0.02008005],
+#             rotation = [[-0.11705924,  0.99311342,  0.00190074],
+#             [ 0.9905303,   0.11661634,  0.07232698],
+#             [ 0.07160724,  0.01034928, -0.99737916]],
+#             from_frame="block",
+#             to_frame="realsense")
 
 def calculate_pose(fa, count):
     place_pose = RigidTransform(
@@ -66,8 +66,8 @@ def calculate_pose(fa, count):
             rotation = [[-0.11705924,  0.99311342,  0.00190074],
             [ 0.9905303,   0.11661634,  0.07232698],
             [ 0.07160724,  0.01034928, -0.99737916]],
-            from_frame="block",
-            to_frame="realsense")
+            from_frame="",
+            to_frame="")
     #place_pose = init_place_pose
     #place_pose[0][3] = place_pose[0][3] + count*0.03
     return place_pose
@@ -186,7 +186,7 @@ if __name__ == "__main__":
                 # Add in logic for placing in different place
                 # perform_place(fa, place_pose, lift_pose)
                 count = 0 # counter for what block we're placing in a given row
-                place_pose = calculate_pose(fa, count, init_place_pose)
+                place_pose = calculate_pose(fa, count)
                 perform_place(fa, place_pose, T_lift_world)
                 count += 1
 
