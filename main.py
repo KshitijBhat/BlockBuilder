@@ -67,10 +67,8 @@ def calculate_pose(fa, count):
             rotation = [[-0.11705924,  0.99311342,  0.00190074],
             [ 0.9905303,   0.11661634,  0.07232698],
             [ 0.07160724,  0.01034928, -0.99737916]],
-            from_frame="",
-            to_frame="")
-    #place_pose = init_place_pose
-    #place_pose[0][3] = place_pose[0][3] + count*0.03
+            from_frame="franka_tool",
+            to_frame="world")
     return place_pose
 
 def perform_place(fa, place_pose, lift_pose):
