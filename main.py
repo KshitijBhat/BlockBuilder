@@ -47,14 +47,15 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
 
 
 def perform_pick(fa, pick_pose, lift_pose):
+    fa.goto_pose(lift_pose)
     fa.goto_gripper(0.04)
-    fa.goto_pose(lift_pose, use_impedance=False)
-    fa.goto_pose(pick_pose, use_impedance=False)
+    fa.goto_pose(lift_pose)
+    fa.goto_pose(pick_pose)
     fa.close_gripper()
-    fa.goto_pose(lift_pose, use_impedance=False)
+    fa.goto_pose(lift_pose)
 
 
-def calculate_pose(fa, count):
+def calculate_pose(count):
     place_pose = RigidTransform(
             translation = [0.54875245, 0.11862949 + count*0.04, 0.01705035],
             rotation = [[-0.02087884,  0.99942336,  0.02641552],
@@ -159,13 +160,12 @@ if __name__ == "__main__":
             # T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # print(T_grasp_world)
-            print(T_ready_world)
             T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"], from_frame="franka_tool", to_frame="world")
             # Pose closer to grasp pose
             T_lift = RigidTransform(translation=[0, 0, 0.05], from_frame=T_ready_world.to_frame, to_frame=T_ready_world.to_frame)
             T_lift_pick_world = T_lift * T_grasp_world
 
-            place_pose = calculate_pose(fa, count)
+            place_pose = calculate_pose(count)
             T_lift_place_world = T_lift * place_pose
 
             logging.info('Visualizing poses')
@@ -176,8 +176,6 @@ if __name__ == "__main__":
                 logging.info('Commanding robot')
                 perform_pick(fa, T_grasp_world, T_lift_pick_world)
                 fa.goto_pose(T_ready_world)
-                # Add in logic for placing in different place
-                # perform_place(fa, place_pose, lift_pose)
                 perform_place(fa, place_pose, T_lift_place_world)
                 fa.goto_pose(T_ready_world)
                 count += 1
