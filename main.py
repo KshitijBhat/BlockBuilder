@@ -81,6 +81,7 @@ if __name__ == "__main__":
     T_camera_ee = RigidTransform.load(cfg['T_camera_ee_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_camera_mount_path'])
     blocks = json.load(open('blocks.json'))
+    print(blocks)
     count = 0 # identifies which block we're placing in a given row
 
     # Init the arm
