@@ -47,7 +47,7 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
 
 
 def perform_pick(fa, pick_pose, lift_pose):
-    fa.goto_gripper(0.04)
+    fa.goto_gripper(0.05)
     fa.goto_pose(lift_pose)
     fa.goto_pose(pick_pose)
     fa.close_gripper()
