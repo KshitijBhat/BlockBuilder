@@ -134,9 +134,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
-    # T_camera_ee = RigidTransform.load(cfg['T_rs_tool_path'])
+    T_camera_ee = RigidTransform.load(cfg['T_rs_base_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
-    T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
+    # T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
 
     # Load the wall that we want to build, can disable once we're recognizing blocks
     # blocks = json.load(open('blocks.json'))
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     # Init the arm
     logging.info('Starting robot')
     fa = FrankaArm()
-    # fa.set_tool_delta_pose(T_camera_mount_delta)
+    fa.set_tool_delta_pose(T_camera_mount_delta)
     fa.reset_joints()
     fa.open_gripper()
 
@@ -180,7 +180,8 @@ if __name__ == "__main__":
             #  grasp function performs that calculation using the block size
 
             # Calc translation for block
-            # T_camera_world = T_ready_world * T_camera_ee
+            T_camera_world = T_ready_world * T_camera_ee
+            print(T_camera_world)
             T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
