@@ -252,6 +252,7 @@ class BlocksDetection3D:
 # def process_video(input_video_path):
 #     cap = cv2.VideoCapture(input_video_path)
 #     block_detection_2d = BlockDetection2D()
+#     i = 0
 #     while cap.isOpened():
 #         ret, frame = cap.read()
 #         if not ret:
@@ -265,14 +266,20 @@ class BlocksDetection3D:
 #                     cv2.circle(frame, tuple(corner), 2, block_detection_2d.color_rgb[color], -1)
 #         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-#         cv2.imshow('Frame', frame)
+#         # cv2.imshow('Frame', frame)
+#         i +=1
+        
+#         if i == 640:
+#             # cv2.imwrite(f'frame_{i}.jpg', frame)
+#             cv2.imshow('Frame', frame)
+#             cv2.waitKey(0)
         
         
 #         if cv2.waitKey(1) & 0xFF == ord('q'):
 #             break
         
 
-#     cap.release()
+#     # cap.release()
 
 # process_video('output_2.mp4')
 
@@ -308,39 +315,39 @@ try:
 
         # Get intrinsics for the depth camera
         depth_intrinsics = depth_frame.profile.as_video_stream_profile().get_intrinsics()
-        # print("depth intrinsics: ", depth_intrinsics)
-        # print("fx: ", depth_intrinsics.fx)
-        # print("fy: ", depth_intrinsics.fy)
-        # print("ppx: ", depth_intrinsics.ppx)
-        # print("ppy: ", depth_intrinsics.ppy)
-        # print("depth scale: ", depth_sensor.get_depth_scale())
+        print("depth intrinsics: ", depth_intrinsics)   
+        print("fx: ", depth_intrinsics.fx)
+        print("fy: ", depth_intrinsics.fy)
+        print("ppx: ", depth_intrinsics.ppx)
+        print("ppy: ", depth_intrinsics.ppy)
+        print("depth scale: ", depth_sensor.get_depth_scale())
 
-        blocks3d.depth_intrinsics = depth_intrinsics
-
-
-        blocks2d = block_detection_2d.get_blocks2d(color_image)
-        frame = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
-        for color, boxes in blocks2d.items():
-            for box in boxes:
-                # print("Box: ", box)
-                for corner in box:
-                    cv2.circle(frame, tuple(corner), 2, block_detection_2d.color_rgb[color], -1)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # blocks3d.depth_intrinsics = depth_intrinsics
 
 
-        blocks_colors_poses = blocks3d.get_block_center_3d(depth_image, blocks2d)
+        # blocks2d = block_detection_2d.get_blocks2d(color_image)
+        # frame = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
+        # for color, boxes in blocks2d.items():
+        #     for box in boxes:
+        #         # print("Box: ", box)
+        #         for corner in box:
+        #             cv2.circle(frame, tuple(corner), 2, block_detection_2d.color_rgb[color], -1)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # center_pixel = rs.rs2_project_point_to_pixel(depth_intrinsics, center)
-        # print("center pixel: ", center_pixel)
-        # cv2.circle(frame, tuple(center_pixel), 2, (255,255,255), -1)
-        for color, poses in blocks_colors_poses.items():
-            print(poses)
 
-        cv2.imshow('Frame', frame)
+        # blocks_colors_poses = blocks3d.get_block_center_3d(depth_image, blocks2d)
+
+        # # center_pixel = rs.rs2_project_point_to_pixel(depth_intrinsics, center)
+        # # print("center pixel: ", center_pixel)
+        # # cv2.circle(frame, tuple(center_pixel), 2, (255,255,255), -1)
+        # for color, poses in blocks_colors_poses.items():
+        #     print(poses)
+
+        # cv2.imshow('Frame', frame)
         
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
 
 
 
