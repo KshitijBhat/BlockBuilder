@@ -139,8 +139,8 @@ if __name__ == "__main__":
     T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
 
     # Load the wall that we want to build, can disable once we're recognizing blocks
-    blocks = json.load(open('blocks.json'))
-    print(blocks)
+    # blocks = json.load(open('blocks.json'))
+    # print(blocks)
     count = 0  # identifies which block we're placing in a given row
 
     # Init the arm
@@ -176,33 +176,13 @@ if __name__ == "__main__":
 
             T_block_camera = get_block_by_color(color_block_to_find)
 
-
-            # Get all blocks
-            # T_blocks_camera = color_blocks.detect(sensor, intr, vis=cfg['vis_detect'])
-            # {"red": [
-            # {
-            #   "rotation": [],
-            #   "translation": []
-            # }
-            # ], "blue": []}
-            # block_pose = T_blocks_camera[color_block_to_find][0]
-            # T_block_camera = RigidTransform(
-            #   translation=block_pose["translation"],
-            #   rotation=block_pose["rotation"],
-            #   from_frame="block",
-            #   to_frame="realsense")
             # TODO: There's no need to adjust the pose given by camera,
             #  grasp function performs that calculation using the block size
-            # T_tag_camera = april.detect(sensor, intr, vis=cfg['vis_detect'])[0]
-            # T_tag_camera = RigidTransform(
-            #    translation=[0, 0, 0.0127],
-            #    from_frame='tag',
-            #    to_frame='realsense'
-            # )
 
             # Calc translation for block
             # T_camera_world = T_ready_world * T_camera_ee
             T_block_world = T_camera_world * T_block_camera
+            print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
             # T_tag_world = T_camera_world * T_tag_camera
             # block_pose = blocks.pop()
