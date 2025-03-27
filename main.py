@@ -181,6 +181,7 @@ if __name__ == "__main__":
 
             # Calc translation for block
             T_camera_world = T_ready_world * T_camera_ee
+            print(T_camera_world)
             T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
