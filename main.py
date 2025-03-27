@@ -133,7 +133,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
-    T_camera_ee = RigidTransform.load(cfg['T_rs_base_path'])
+    T_camera_ee = RigidTransform.load(cfg['T_rs_tool_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
     # T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
 
@@ -180,6 +180,7 @@ if __name__ == "__main__":
 
             # Calc translation for block
             print(T_camera_ee)
+            print(T_ready_world)
             T_camera_world = T_ready_world * T_camera_ee
             print(T_camera_world)
             T_block_world = T_camera_world * T_block_camera
