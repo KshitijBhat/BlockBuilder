@@ -211,7 +211,7 @@ if __name__ == "__main__":
             # logging.info('Finding closest orthogonal grasp')
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
-            print(f"Grasp in world frame: {T_grasp_world}}")
+            print(f"Grasp in world frame: {T_grasp_world}")
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # print(T_grasp_world)
             # T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"],
