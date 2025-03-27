@@ -190,6 +190,7 @@ if __name__ == "__main__":
 
             T_observe_block_world = RigidTransform(translation=[0, 0, 0.25], from_frame=T_ready_world.to_frame,
                                     to_frame=T_ready_world.to_frame) * T_block_world
+            fa.goto_pose(T_observe_block_world)
 
             T_block_world = get_block_by_color(color_block_to_find)
 
