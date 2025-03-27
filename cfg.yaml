@@ -19,6 +19,7 @@ april_tag:
 
 T_rs_tool_path: examples/rs_tool.tf
 T_tool_base_path: examples/tool_base.tf
+T_rs_base_path: examples/rs_base.tf
 
 cube_size: 0.04
 

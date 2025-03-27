@@ -134,8 +134,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
-    T_camera_ee = RigidTransform.load(cfg['T_rs_tool_path'])
+    # T_camera_ee = RigidTransform.load(cfg['T_rs_tool_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
+    T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
 
     # Load the wall that we want to build, can disable once we're recognizing blocks
     blocks = json.load(open('blocks.json'))
@@ -200,7 +201,7 @@ if __name__ == "__main__":
             # )
 
             # Calc translation for block
-            T_camera_world = T_ready_world * T_camera_ee
+            # T_camera_world = T_ready_world * T_camera_ee
             T_block_world = T_camera_world * T_block_camera
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
             # T_tag_world = T_camera_world * T_tag_camera
