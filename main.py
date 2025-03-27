@@ -146,7 +146,7 @@ if __name__ == "__main__":
     # Init the arm
     logging.info('Starting robot')
     fa = FrankaArm()
-    fa.set_tool_delta_pose(T_camera_mount_delta)
+    # fa.set_tool_delta_pose(T_camera_mount_delta)
     fa.reset_joints()
     fa.open_gripper()
 
