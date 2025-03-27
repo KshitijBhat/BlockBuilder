@@ -102,6 +102,7 @@ def get_block_by_color(target_color_name):
         marker_list = rospy.wait_for_message('/marker_array', MarkerArray)
 
         for block_marker in marker_list:
+            print(block_marker)
             if color_matches(block_marker.color, target_color):
                 pose = block_marker.pose
                 translation = [pose.position.x, pose.position.y, pose.position.z]
