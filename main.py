@@ -125,7 +125,7 @@ def get_block_by_color(target_color_name):
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    rospy.init_node('block_marker_listener', anonymous=True)
+    rospy.init_node('block_marker_listener')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_grasp', '-ng', action='store_true')
