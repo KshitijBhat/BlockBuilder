@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # Move to ready position
     fa.goto_pose(T_ready_world)
 
-    T_observe_pick_world = RigidTransform.load(
+    T_observe_pick_world = RigidTransform(
         translation=[0.50389452, -0.31374372, 0.39562043],
         rotation=[
             [0.00365537, -0.99593836, 0.08985727],
