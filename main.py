@@ -155,9 +155,17 @@ if __name__ == "__main__":
     T_ready_world = fa.get_pose()
     T_ready_world.translation[0] += 0.25
     T_ready_world.translation[2] = 0.4
-
     # Move to ready position
     fa.goto_pose(T_ready_world)
+
+    T_observe_pick_world = RigidTransform.load(
+        translation=[0.50389452, -0.31374372, 0.39562043],
+        rotation=[
+            [0.00365537, -0.99593836, 0.08985727],
+            [-0.99722475, -0.01030079, -0.07360394],
+            [0.07423059, -0.08933884, -0.99323116],
+        ]
+    )
 
     wall_configuration = [
         [
@@ -175,6 +183,7 @@ if __name__ == "__main__":
         while len(row_configuration) > 0:
             color_block_to_find = row_configuration.pop()
 
+            fa.goto_pose(T_observe_pick_world)
             T_block_world = get_block_by_color(color_block_to_find)
 
             # TODO: There's no need to adjust the pose given by camera,
