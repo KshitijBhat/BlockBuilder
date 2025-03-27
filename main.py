@@ -188,6 +188,11 @@ if __name__ == "__main__":
             fa.goto_pose(T_observe_pick_world)
             T_block_world = get_block_by_color(color_block_to_find)
 
+            T_observe_block_world = RigidTransform(translation=[0, 0, 0.25], from_frame=T_ready_world.to_frame,
+                                    to_frame=T_ready_world.to_frame) * T_block_world
+
+            T_block_world = get_block_by_color(color_block_to_find)
+
             # TODO: There's no need to adjust the pose given by camera,
             #  grasp function performs that calculation using the block size
 
