@@ -207,7 +207,7 @@ if __name__ == "__main__":
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
 
             T_observe_block_world = RigidTransform(translation=[0, 0, 0.05], from_frame=T_ready_world.to_frame,
-                                    to_frame=T_ready_world.to_frame)
+                                    to_frame=T_ready_world.to_frame) * T_grasp_world
             fa.goto_pose(T_observe_block_world)
 
             T_block_world = get_block_by_color(color_block_to_find)
