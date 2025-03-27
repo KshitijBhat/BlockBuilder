@@ -146,7 +146,7 @@ if __name__ == "__main__":
     # Init the arm
     logging.info('Starting robot')
     fa = FrankaArm()
-    fa.set_tool_delta_pose(T_camera_mount_delta)
+    # fa.set_tool_delta_pose(T_camera_mount_delta)
     fa.reset_joints()
     fa.open_gripper()
 
@@ -185,7 +185,7 @@ if __name__ == "__main__":
             T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
-            # T_tag_world = T_camera_world * T_tag_camera
+            # T_tag_world = T_camera_world * T_tag_camer
             # block_pose = blocks.pop()
             # logging.info('Tag has translation {}'.format(T_tag_world.translation))
 
@@ -193,6 +193,7 @@ if __name__ == "__main__":
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
             print(f"Grasp in world frame: {T_grasp_world}")
+            exit(0)
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # print(T_grasp_world)
             # T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"],
