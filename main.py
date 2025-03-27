@@ -36,7 +36,8 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
     grasp_R = make_det_one(np.c_[grasp_x_axis, grasp_y_axis, grasp_z_axis])
     # Adjust cube size to match
     cube_size = .0254
-    grasp_translation = T_tag_world.translation + np.array([0, 0, -cube_size / 2])
+    grasp_translation = (T_tag_world.translation + np.array([0, 0, -cube_size / 2]))
+    grasp_translation[-1] = cube_size/2
     return RigidTransform(
         rotation=grasp_R,
         translation=grasp_translation,
@@ -45,7 +46,8 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
 
 
 def perform_pick(fa, pick_pose, lift_pose, use_gripper=True):
-    fa.goto_gripper(0.05)
+    # fa.goto_gripper(0.05)
+    fa.open_gripper()
     fa.goto_pose(lift_pose)
     fa.goto_pose(pick_pose)
 
@@ -99,8 +101,8 @@ def get_block_by_color(target_color_name):
 
     i = 0
     while not rospy.is_shutdown() and i < 100:
-        marker_list = rospy.wait_for_message('/marker_array', MarkerArray)
-        print(marker_list)
+        marker_list = rospy.wait_for_message('/world_marker_array', MarkerArray)
+        # print(marker_list)
 
         for block_marker in marker_list.markers:
             print(block_marker)
@@ -115,7 +117,7 @@ def get_block_by_color(target_color_name):
                     translation=translation,
                     rotation=rotation,
                     from_frame='block',
-                    to_frame='realsense'
+                    to_frame='world'
                 )
                 rospy.loginfo(f"Found {target_color_name} block at {translation}")
                 return T_block_camera
@@ -127,14 +129,13 @@ def get_block_by_color(target_color_name):
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    # rospy.init_node('block_marker_listener')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_grasp', '-ng', action='store_true')
     args = parser.parse_args()
     cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
-    T_camera_ee = RigidTransform.load(cfg['T_rs_base_path'])
+    T_camera_ee = RigidTransform.load(cfg['T_rs_tool_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
     # T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
 
@@ -154,9 +155,19 @@ if __name__ == "__main__":
     T_ready_world = fa.get_pose()
     T_ready_world.translation[0] += 0.25
     T_ready_world.translation[2] = 0.4
-
     # Move to ready position
     fa.goto_pose(T_ready_world)
+
+    T_observe_pick_world = RigidTransform(
+        translation=[ 0.50688894, -0.23398067,  0.47516064],
+        rotation=[
+            [-.000595312285, -.998558656,  .0534888540],
+            [-.992740906, -.00583873282, -.120051772],
+            [.120191043, -.0531720416, -.991325635]
+        ],
+        from_frame='franka_tool',
+        to_frame='world'
+    )
 
     wall_configuration = [
         [
@@ -174,14 +185,18 @@ if __name__ == "__main__":
         while len(row_configuration) > 0:
             color_block_to_find = row_configuration.pop()
 
-            T_block_camera = get_block_by_color(color_block_to_find)
+            fa.goto_pose(T_observe_pick_world)
+            T_block_world = get_block_by_color(color_block_to_find)
 
             # TODO: There's no need to adjust the pose given by camera,
             #  grasp function performs that calculation using the block size
 
             # Calc translation for block
-            T_camera_world = T_ready_world * T_camera_ee
-            T_block_world = T_camera_world * T_block_camera
+            # print(T_camera_ee)
+            # print(T_ready_world)
+            # T_camera_world = T_ready_world * T_camera_ee
+            # print(T_camera_world)
+            # T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
             # T_tag_world = T_camera_world * T_tag_camera
@@ -192,6 +207,7 @@ if __name__ == "__main__":
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
             print(f"Grasp in world frame: {T_grasp_world}")
+            # exit(0)
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # print(T_grasp_world)
             # T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"],
