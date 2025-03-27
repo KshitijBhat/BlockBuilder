@@ -117,7 +117,7 @@ def get_block_by_color(target_color_name):
                     translation=translation,
                     rotation=rotation,
                     from_frame='block',
-                    to_frame='realsense'
+                    to_frame='world'
                 )
                 rospy.loginfo(f"Found {target_color_name} block at {translation}")
                 return T_block_camera
@@ -175,17 +175,17 @@ if __name__ == "__main__":
         while len(row_configuration) > 0:
             color_block_to_find = row_configuration.pop()
 
-            T_block_camera = get_block_by_color(color_block_to_find)
+            T_block_world = get_block_by_color(color_block_to_find)
 
             # TODO: There's no need to adjust the pose given by camera,
             #  grasp function performs that calculation using the block size
 
             # Calc translation for block
-            print(T_camera_ee)
-            print(T_ready_world)
-            T_camera_world = T_ready_world * T_camera_ee
-            print(T_camera_world)
-            T_block_world = T_camera_world * T_block_camera
+            # print(T_camera_ee)
+            # print(T_ready_world)
+            # T_camera_world = T_ready_world * T_camera_ee
+            # print(T_camera_world)
+            # T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
             # T_tag_world = T_camera_world * T_tag_camera
