@@ -8,7 +8,7 @@ from time import sleep
 import numpy as np
 
 import rospy
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 from autolab_core import RigidTransform, YamlConfig
 from frankapy import FrankaArm
 
@@ -99,26 +99,27 @@ def get_block_by_color(target_color_name):
 
     i = 0
     while not rospy.is_shutdown() and i < 100:
-        block_marker = rospy.wait_for_message('/blocks', Marker)
+        marker_list = rospy.wait_for_message('/marker_array', MarkerArray)
 
-        if color_matches(block_marker.color, target_color):
-            pose = block_marker.pose
-            translation = [pose.position.x, pose.position.y, pose.position.z]
-            quaternion = [pose.orientation.x, pose.orientation.y,
-                          pose.orientation.z, pose.orientation.w]
-            rotation = RigidTransform.rotation_from_quaternion(quaternion)
+        for block_marker in marker_list:
+            if color_matches(block_marker.color, target_color):
+                pose = block_marker.pose
+                translation = [pose.position.x, pose.position.y, pose.position.z]
+                quaternion = [pose.orientation.x, pose.orientation.y,
+                              pose.orientation.z, pose.orientation.w]
+                rotation = RigidTransform.rotation_from_quaternion(quaternion)
 
-            T_block_camera = RigidTransform(
-                translation=translation,
-                rotation=rotation,
-                from_frame='block',
-                to_frame='realsense'
-            )
-            rospy.loginfo(f"Found {target_color_name} block at {translation}")
-            return T_block_camera
-        else:
-            rospy.logdebug(
-                f"Ignoring block with color: {block_marker.color.r}, {block_marker.color.g}, {block_marker.color.b}")
+                T_block_camera = RigidTransform(
+                    translation=translation,
+                    rotation=rotation,
+                    from_frame='block',
+                    to_frame='realsense'
+                )
+                rospy.loginfo(f"Found {target_color_name} block at {translation}")
+                return T_block_camera
+            else:
+                rospy.logdebug(
+                    f"Ignoring block with color: {block_marker.color.r}, {block_marker.color.g}, {block_marker.color.b}")
         i += 1
 
 
@@ -172,6 +173,7 @@ if __name__ == "__main__":
 
             T_block_camera = get_block_by_color(color_block_to_find)
 
+
             # Get all blocks
             # T_blocks_camera = color_blocks.detect(sensor, intr, vis=cfg['vis_detect'])
             # {"red": [
@@ -196,20 +198,20 @@ if __name__ == "__main__":
             # )
 
             # Calc translation for block
-            # T_camera_world = T_ready_world * T_camera_ee
-            # T_block_world = T_camera_world * T_block_camera
+            T_camera_world = T_ready_world * T_camera_ee
+            T_block_world = T_camera_world * T_block_camera
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
             # T_tag_world = T_camera_world * T_tag_camera
-            block_pose = blocks.pop()
+            # block_pose = blocks.pop()
             # logging.info('Tag has translation {}'.format(T_tag_world.translation))
 
             # logging.info('Finding closest orthogonal grasp')
             # Get grasp pose
-            # T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
+            T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # print(T_grasp_world)
-            T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"],
-                                           from_frame="franka_tool", to_frame="world")
+            # T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"],
+            #                                from_frame="franka_tool", to_frame="world")
             T_place_world = calculate_pose(count)
 
             # Pose closer to pick/place poses
@@ -218,12 +220,10 @@ if __name__ == "__main__":
             T_lift_pick_world = T_lift * T_grasp_world
             T_lift_place_world = T_lift * T_place_world
 
-            if not args.no_grasp:
-                logging.info('Grasping activated')
-                perform_pick(fa, T_grasp_world, T_lift_pick_world, not args.no_grasp)
-                fa.goto_pose(T_ready_world)
-                perform_place(fa, T_place_world, T_lift_place_world, not args.no_grasp)
-                fa.goto_pose(T_ready_world)
+            perform_pick(fa, T_grasp_world, T_lift_pick_world, not args.no_grasp)
+            fa.goto_pose(T_ready_world)
+            perform_place(fa, T_place_world, T_lift_place_world, not args.no_grasp)
+            fa.goto_pose(T_ready_world)
 
             count += 1
 
