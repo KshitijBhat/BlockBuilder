@@ -127,16 +127,15 @@ def get_block_by_color(target_color_name):
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    # rospy.init_node('block_marker_listener')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_grasp', '-ng', action='store_true')
     args = parser.parse_args()
     cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
-    T_camera_ee = RigidTransform.load(cfg['T_rs_base_path'])
+    # T_camera_ee = RigidTransform.load(cfg['T_rs_base_path'])
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
-    # T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
+    T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
 
     # Load the wall that we want to build, can disable once we're recognizing blocks
     # blocks = json.load(open('blocks.json'))
@@ -180,7 +179,7 @@ if __name__ == "__main__":
             #  grasp function performs that calculation using the block size
 
             # Calc translation for block
-            T_camera_world = T_ready_world * T_camera_ee
+            # T_camera_world = T_ready_world * T_camera_ee
             print(T_camera_world)
             T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
