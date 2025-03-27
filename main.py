@@ -180,6 +180,7 @@ if __name__ == "__main__":
 
             # Calc translation for block
             print(T_camera_ee)
+            print(T_ready_world)
             T_camera_world = T_ready_world * T_camera_ee
             print(T_camera_world)
             T_block_world = T_camera_world * T_block_camera
