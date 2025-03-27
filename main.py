@@ -211,7 +211,7 @@ if __name__ == "__main__":
             fa.goto_pose(T_observe_block_world)
 
             T_block_world = get_block_by_color(color_block_to_find)
-            T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
+            T_grasp_world = get_closest_grasp_pose(T_block_world, T_observe_block_world)
 
             # exit(0)
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
