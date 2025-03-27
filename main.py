@@ -101,7 +101,7 @@ def get_block_by_color(target_color_name):
 
     i = 0
     while not rospy.is_shutdown() and i < 100:
-        marker_list = rospy.wait_for_message('/marker_array', MarkerArray)
+        marker_list = rospy.wait_for_message('/world_marker_array', MarkerArray)
         # print(marker_list)
 
         for block_marker in marker_list.markers:
