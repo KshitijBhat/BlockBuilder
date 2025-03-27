@@ -188,12 +188,6 @@ if __name__ == "__main__":
             fa.goto_pose(T_observe_pick_world)
             T_block_world = get_block_by_color(color_block_to_find)
 
-            T_observe_block_world = RigidTransform(translation=[0, 0, 0.25], from_frame=T_ready_world.to_frame,
-                                    to_frame=T_ready_world.to_frame) * T_block_world
-            fa.goto_pose(T_observe_block_world)
-
-            T_block_world = get_block_by_color(color_block_to_find)
-
             # TODO: There's no need to adjust the pose given by camera,
             #  grasp function performs that calculation using the block size
 
@@ -203,7 +197,6 @@ if __name__ == "__main__":
             # T_camera_world = T_ready_world * T_camera_ee
             # print(T_camera_world)
             # T_block_world = T_camera_world * T_block_camera
-            print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
             # T_tag_world = T_camera_world * T_tag_camera
             # block_pose = blocks.pop()
@@ -212,7 +205,14 @@ if __name__ == "__main__":
             # logging.info('Finding closest orthogonal grasp')
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
-            print(f"Grasp in world frame: {T_grasp_world}")
+
+            T_observe_block_world = RigidTransform(translation=[0, 0, 0.25], from_frame='franka_tool',
+                                    to_frame=T_ready_world.to_frame) * T_grasp_world
+            fa.goto_pose(T_observe_block_world)
+
+            T_block_world = get_block_by_color(color_block_to_find)
+            T_grasp_world = get_closest_grasp_pose(T_block_world, T_observe_block_world)
+
             # exit(0)
             # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
             # print(T_grasp_world)
