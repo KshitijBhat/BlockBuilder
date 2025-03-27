@@ -185,7 +185,7 @@ if __name__ == "__main__":
             T_block_world = T_camera_world * T_block_camera
             print(T_block_world)
             # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
-            # T_tag_world = T_camera_world * T_tag_camera
+            # T_tag_world = T_camera_world * T_tag_camer
             # block_pose = blocks.pop()
             # logging.info('Tag has translation {}'.format(T_tag_world.translation))
 
