@@ -1,9 +1,6 @@
-import os
 import logging
 import argparse
 import yaml
-import json
-from time import sleep
 
 import numpy as np
 
@@ -23,7 +20,7 @@ def make_det_one(R):
     return U @ np.eye(len(R)) @ Vt
 
 
-def get_closest_grasp_pose(T_tag_world, T_ee_world):
+def get_closest_grasp_pose(T_tag_world, T_ee_world, cube_size):
     tag_axes = [
         T_tag_world.rotation[:, 0], -T_tag_world.rotation[:, 0],
         T_tag_world.rotation[:, 1], -T_tag_world.rotation[:, 1]
@@ -35,23 +32,22 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world):
     grasp_y_axis = np.cross(grasp_z_axis, grasp_x_axis)
     grasp_R = make_det_one(np.c_[grasp_x_axis, grasp_y_axis, grasp_z_axis])
     # Adjust cube size to match
-    cube_size = .0254
-    grasp_translation = (T_tag_world.translation + np.array([0, 0, -cube_size / 2]))
-    grasp_translation[-1] = cube_size/2
+    T_tag_world.translation[-1] = cube_size/2
+    # grasp_translation = (T_tag_world.translation + np.array([0, 0, -cube_size / 2]))
+    # grasp_translation[-1] = cube_size/2
     return RigidTransform(
         rotation=grasp_R,
-        translation=grasp_translation,
+        translation=T_tag_world.translation,
         from_frame=T_ee_world.from_frame, to_frame=T_ee_world.to_frame
     )
 
 
-def perform_pick(fa, pick_pose, lift_pose, use_gripper=True):
-    # fa.goto_gripper(0.05)
-    fa.open_gripper()
+def perform_pick(fa, pick_pose, lift_pose, no_gripper):
+    fa.goto_gripper(0.05)
     fa.goto_pose(lift_pose)
     fa.goto_pose(pick_pose)
 
-    if use_gripper:
+    if not no_gripper:
         fa.close_gripper()
 
     fa.goto_pose(lift_pose)
@@ -68,11 +64,11 @@ def calculate_pose(count):
     return place_pose
 
 
-def perform_place(fa, place_pose, lift_pose, use_gripper=True):
+def perform_place(fa, place_pose, lift_pose, no_gripper):
     fa.goto_pose(lift_pose)
     fa.goto_pose(place_pose)
 
-    if use_gripper:
+    if not no_gripper:
         fa.goto_gripper(0.05)
 
     fa.goto_pose(lift_pose)
@@ -102,7 +98,6 @@ def get_block_by_color(target_color_name):
     i = 0
     while not rospy.is_shutdown() and i < 100:
         marker_list = rospy.wait_for_message('/world_marker_array', MarkerArray)
-        # print(marker_list)
 
         for block_marker in marker_list.markers:
             print(block_marker)
@@ -125,6 +120,7 @@ def get_block_by_color(target_color_name):
                 rospy.logdebug(
                     f"Ignoring block with color: {block_marker.color.r}, {block_marker.color.g}, {block_marker.color.b}")
         i += 1
+    return None
 
 
 if __name__ == "__main__":
@@ -135,13 +131,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
-    T_camera_ee = RigidTransform.load(cfg['T_rs_tool_path'])
+    # TODO: Test removal of this
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
-    # T_camera_world = RigidTransform.load(cfg['T_rs_base_path'])
+    cube_size = cfg['cube_size']
 
-    # Load the wall that we want to build, can disable once we're recognizing blocks
-    # blocks = json.load(open('blocks.json'))
-    # print(blocks)
     count = 0  # identifies which block we're placing in a given row
 
     # Init the arm
@@ -158,6 +151,7 @@ if __name__ == "__main__":
     # Move to ready position
     fa.goto_pose(T_ready_world)
 
+    # Pose for observing the picking area
     T_observe_pick_world = RigidTransform(
         translation=[ 0.50688894, -0.23398067,  0.47516064],
         rotation=[
@@ -183,41 +177,18 @@ if __name__ == "__main__":
         row_configuration = wall_configuration.pop()
         logging.info(f'Row configuration: {row_configuration}')
         while len(row_configuration) > 0:
-            color_block_to_find = row_configuration.pop()
+            color_to_find = row_configuration.pop()
 
             fa.goto_pose(T_observe_pick_world)
-            T_block_world = get_block_by_color(color_block_to_find)
+            T_block_world = get_block_by_color(color_to_find)
 
-            # TODO: There's no need to adjust the pose given by camera,
-            #  grasp function performs that calculation using the block size
+            if not T_block_world:
+                logging.error(f"{color_to_find} block not found, exiting.")
+                exit(2)
 
-            # Calc translation for block
-            # print(T_camera_ee)
-            # print(T_ready_world)
-            # T_camera_world = T_ready_world * T_camera_ee
-            # print(T_camera_world)
-            # T_block_world = T_camera_world * T_block_camera
-            # logging.info(f'{color_block_to_find} block has translation {T_block_world}')
-            # T_tag_world = T_camera_world * T_tag_camera
-            # block_pose = blocks.pop()
-            # logging.info('Tag has translation {}'.format(T_tag_world.translation))
-
-            # logging.info('Finding closest orthogonal grasp')
             # Get grasp pose
-            T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world)
+            T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
 
-            T_observe_block_world = RigidTransform(translation=[0, 0, 0.25], from_frame=T_ready_world.to_frame,
-                                    to_frame=T_ready_world.to_frame) * T_grasp_world
-            fa.goto_pose(T_observe_block_world)
-
-            T_block_world = get_block_by_color(color_block_to_find)
-            T_grasp_world = get_closest_grasp_pose(T_block_world, T_observe_block_world)
-
-            # exit(0)
-            # T_grasp_world = get_closest_grasp_pose(T_tag_world, T_ready_world)
-            # print(T_grasp_world)
-            # T_grasp_world = RigidTransform(translation=block_pose["translation"], rotation=block_pose["rotation"],
-            #                                from_frame="franka_tool", to_frame="world")
             T_place_world = calculate_pose(count)
 
             # Pose closer to pick/place poses
@@ -226,9 +197,9 @@ if __name__ == "__main__":
             T_lift_pick_world = T_lift * T_grasp_world
             T_lift_place_world = T_lift * T_place_world
 
-            perform_pick(fa, T_grasp_world, T_lift_pick_world, not args.no_grasp)
+            perform_pick(fa, T_grasp_world, T_lift_pick_world, args.no_grasp)
             fa.goto_pose(T_ready_world)
-            perform_place(fa, T_place_world, T_lift_place_world, not args.no_grasp)
+            perform_place(fa, T_place_world, T_lift_place_world, args.no_grasp)
             fa.goto_pose(T_ready_world)
 
             count += 1
