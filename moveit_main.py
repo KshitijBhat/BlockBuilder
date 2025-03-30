@@ -164,23 +164,21 @@ if __name__ == "__main__":
 
     # Init the arm
     logging.info('Starting robot')
-    fa = FrankaArm()
-    fa.set_tool_delta_pose(T_camera_mount_delta)
-    fa.reset_joints()
-    fa.open_gripper()
 
     # This script plans a straight line path from the current robot pose to pose_goal
     # This plan can then be executed on the robot using the execute_plan method
 
     # create a MoveItPlanner object and start the moveit node
     franka_moveit = MoveItPlanner()
+    franka_moveit.fa.reset_joints()
+    franka_moveit.fa.open_gripper()
 
     # Get the world frame and create a "ready" position
-    T_ready_world = fa.get_pose()
+    T_ready_world = franka_moveit.fa.get_pose()
     T_ready_world.translation[0] += 0.25
     T_ready_world.translation[2] = 0.4
     ready_pose = Pose(position=Point(*T_ready_world.translation), rotation=Quaternion(*T_ready_world.quaternion))
-    execute_pose(fa, ready_pose)
+    execute_pose(franka_moveit, ready_pose)
     # Move to ready position
     # fa.goto_pose(T_ready_world)
 
