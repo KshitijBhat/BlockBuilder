@@ -179,7 +179,7 @@ if __name__ == "__main__":
     T_ready_world.translation[2] = 0.4
     print(T_ready_world)
     print(*T_ready_world.quaternion)
-    ready_pose = Pose(position=Point(*T_ready_world.translation), orientation=Quaternion(*T_ready_world.quaternion))
+    ready_pose = Pose(position=Point(*T_ready_world.translation))
     print(ready_pose)
     execute_pose(franka_moveit, ready_pose)
     # Move to ready position
