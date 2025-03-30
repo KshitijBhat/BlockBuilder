@@ -28,10 +28,10 @@ class BlocksDetection3D:
 
         # Change these depth intrinsics for the Intel RealSense D435
 
-        # self.fx = 421.9288330078125
-        # self.fy = 421.9288330078125
-        # self.cx = 419.6107482910156
-        # self.cy = 244.43862915039062
+        self.fx = 593.1236572265625
+        self.fy = 593.1236572265625
+        self.cx = 421.08984375
+        self.cy = 240.96368408203125
 
         self.depth_intrinsics = rs.pyrealsense2.intrinsics()
         self.depth_intrinsics.height = 480
