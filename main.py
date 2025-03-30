@@ -53,7 +53,7 @@ def perform_pick(fa, pick_pose, lift_pose, no_gripper):
     fa.goto_pose(lift_pose)
 
 
-def calculate_pose(col):
+def calculate_pose(col, row):
     place_pose = RigidTransform(
         translation=[0.54875245, 0.11862949 + col * 0.05, 0.01705035 + row*0.05],
         rotation=[[-0.02087884, 0.99942336, 0.02641552],
@@ -190,7 +190,7 @@ if __name__ == "__main__":
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
 
-            T_place_world = calculate_pose(col)
+            T_place_world = calculate_pose(col, row)
 
             # Pose closer to pick/place poses
             T_lift = RigidTransform(translation=[0, 0, 0.05], from_frame=T_ready_world.to_frame,
