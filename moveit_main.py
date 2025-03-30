@@ -177,6 +177,8 @@ if __name__ == "__main__":
     T_ready_world = franka_moveit.fa.get_pose()
     T_ready_world.translation[0] += 0.25
     T_ready_world.translation[2] = 0.4
+    print(T_ready_world)
+    print(*T_ready_world.quaternion)
     ready_pose = Pose(position=Point(*T_ready_world.translation), orientation=Quaternion(*T_ready_world.quaternion))
     print(ready_pose)
     execute_pose(franka_moveit, ready_pose)
