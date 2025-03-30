@@ -136,7 +136,7 @@ if __name__ == "__main__":
     cube_size = cfg['cube_size']
 
     row = 0  # identifies which row is currently being built
-    col = 0 # identifies which block we're placing in a given row
+    
 
     # Init the arm
     logging.info('Starting robot')
@@ -175,6 +175,7 @@ if __name__ == "__main__":
     ]
 
     while len(wall_configuration) > 0:
+        col = 0 # identifies which block we're placing in a given row
         row_configuration = wall_configuration.pop()
         logging.info(f'Row configuration: {row_configuration}')
         while len(row_configuration) > 0:
@@ -202,8 +203,8 @@ if __name__ == "__main__":
             fa.goto_pose(T_ready_world)
             perform_place(fa, T_place_world, T_lift_place_world, args.no_grasp)
             fa.goto_pose(T_ready_world)
-
             col += 1
+        
         row += 1
 
     exit(0)
