@@ -115,6 +115,7 @@ def get_block_by_color(target_color_name):
                     to_frame='world'
                 )
                 rospy.loginfo(f"Found {target_color_name} block at {translation}")
+                rospy.loginfo(f"{target_color_name} block rotation {rotation}")
                 return T_block_camera
             else:
                 rospy.logdebug(
@@ -192,6 +193,7 @@ if __name__ == "__main__":
 
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
+            print(T_grasp_world)
 
             T_place_world = calculate_pose(col, row)
 
