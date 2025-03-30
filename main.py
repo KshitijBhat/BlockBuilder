@@ -149,6 +149,7 @@ if __name__ == "__main__":
     T_ready_world = fa.get_pose()
     T_ready_world.translation[0] += 0.25
     T_ready_world.translation[2] = 0.4
+    print(T_ready_world)
     # Move to ready position
     fa.goto_pose(T_ready_world)
 
