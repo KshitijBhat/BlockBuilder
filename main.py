@@ -167,11 +167,12 @@ if __name__ == "__main__":
 
     wall_configuration = [
         [
+            "yellow",
+            "blue"
+        ],
+        [
             "red",
-            "red",
-            "blue",
-            "green",
-            "yellow"
+            "green"
         ]
     ]
 
