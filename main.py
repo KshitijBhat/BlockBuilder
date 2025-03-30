@@ -53,9 +53,9 @@ def perform_pick(fa, pick_pose, lift_pose, no_gripper):
     fa.goto_pose(lift_pose)
 
 
-def calculate_pose(count):
+def calculate_pose(col):
     place_pose = RigidTransform(
-        translation=[0.54875245, 0.11862949 + count * 0.05, 0.01705035],
+        translation=[0.54875245, 0.11862949 + col * 0.05, 0.01705035 + row*0.05],
         rotation=[[-0.02087884, 0.99942336, 0.02641552],
                   [0.99757839, 0.01907633, 0.06674037],
                   [0.06619797, 0.02774502, -0.99742065]],
@@ -135,7 +135,8 @@ if __name__ == "__main__":
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
     cube_size = cfg['cube_size']
 
-    count = 0  # identifies which block we're placing in a given row
+    row = 0  # identifies which row is currently being built
+    col = 0 # identifies which block we're placing in a given row
 
     # Init the arm
     logging.info('Starting robot')
@@ -189,7 +190,7 @@ if __name__ == "__main__":
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
 
-            T_place_world = calculate_pose(count)
+            T_place_world = calculate_pose(col)
 
             # Pose closer to pick/place poses
             T_lift = RigidTransform(translation=[0, 0, 0.05], from_frame=T_ready_world.to_frame,
@@ -202,6 +203,7 @@ if __name__ == "__main__":
             perform_place(fa, T_place_world, T_lift_place_world, args.no_grasp)
             fa.goto_pose(T_ready_world)
 
-            count += 1
+            col += 1
+        row += 1
 
     exit(0)
