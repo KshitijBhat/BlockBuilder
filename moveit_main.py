@@ -11,7 +11,7 @@ from frankapy import FrankaArm
 
 import sys
 sys.path.append("/home/ros_ws")
-from moveit_class import MoveItPlanner
+from Planning.moveit_class import MoveItPlanner
 from geometry_msgs.msg import Pose, Point, Quaternion
 import scipy.spatial.transform as spt
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_grasp', '-ng', action='store_true')
     args = parser.parse_args()
-    cfg = yaml.load(open('../cfg.yaml'))
+    cfg = yaml.load(open('cfg.yaml'))
     # Load the predetermined camera info
     # TODO: Test removal of this
     T_camera_mount_delta = RigidTransform.load(cfg['T_tool_base_path'])
