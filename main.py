@@ -55,7 +55,7 @@ def perform_pick(fa, pick_pose, lift_pose, no_gripper):
 
 def calculate_pose(col, row):
     place_pose = RigidTransform(
-        translation=[0.54875245, 0.11862949 + col * 0.05, 0.01705035 + row*0.05],
+        translation=[0.54875245, 0.11862949 + col * 0.05, 0.01705035 + row*0.03],
         rotation=[[-0.02087884, 0.99942336, 0.02641552],
                   [0.99757839, 0.01907633, 0.06674037],
                   [0.06619797, 0.02774502, -0.99742065]],
