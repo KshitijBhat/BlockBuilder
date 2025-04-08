@@ -241,9 +241,8 @@ if __name__ == "__main__":
 
     while block_placement_positions:
         block_placement_position = block_placement_positions.pop()
-        T_grasp_world = get_closest_grasp_pose(block_placement_position, T_ready_world, cube_size)
         T_lift_pick_world = T_lift * block_placement_position
-        perform_pick(fa, T_grasp_world, T_lift_pick_world, args.no_grasp)
+        perform_pick(fa, block_placement_position, T_lift_pick_world, args.no_grasp)
         fa.goto_pose(T_ready_world)
         fa.open_gripper()
 
