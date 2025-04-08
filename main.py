@@ -109,6 +109,8 @@ def get_block_by_color(target_color_name=None):
         for block_marker in marker_list.markers:
             if color_matches(block_marker.color, target_color):
                 pose = block_marker.pose
+                if pose.position.x > .85:
+                    continue
                 translation = [pose.position.x, pose.position.y, pose.position.z]
                 quaternion = [pose.orientation.x, pose.orientation.y,
                               pose.orientation.z, pose.orientation.w]
@@ -201,8 +203,8 @@ if __name__ == "__main__":
 
             print(T_block_world)
 
-           # T_block_world.translation[0] += cube_size/2
-           # T_block_world.translation[1] -= cube_size/6
+            # T_block_world.translation[0] += cube_size/2
+            # T_block_world.translation[1] -= cube_size/6
 
             print(T_block_world)
             # Get grasp pose
