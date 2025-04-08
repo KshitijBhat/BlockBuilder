@@ -212,7 +212,7 @@ if __name__ == "__main__":
             T_place_world = calculate_pose(col, row)
 
             # Pose closer to pick/place poses
-            T_lift = RigidTransform(translation=[0, 0, cube_size+0.02], from_frame=T_ready_world.to_frame,
+            T_lift = RigidTransform(translation=[0, 0, cube_size*2], from_frame=T_ready_world.to_frame,
                                     to_frame=T_ready_world.to_frame)
             T_lift_pick_world = T_lift * T_grasp_world
             T_lift_place_world = T_lift * T_place_world
