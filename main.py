@@ -87,7 +87,7 @@ def get_block_position(fa, color_to_find):
     return get_block_by_color(color_to_find)
 
 
-def get_block_by_color(target_color_name):
+def get_block_by_color(target_color_name=None):
     # Define color mappings (RGB values)
     COLOR_MAP = {
         'red': (1.0, 0.0, 0.0),
@@ -107,7 +107,6 @@ def get_block_by_color(target_color_name):
         marker_list = rospy.wait_for_message('/world_marker_array', MarkerArray)
 
         for block_marker in marker_list.markers:
-            print(block_marker)
             if color_matches(block_marker.color, target_color):
                 pose = block_marker.pose
                 translation = [pose.position.x, pose.position.y, pose.position.z]
@@ -186,12 +185,14 @@ if __name__ == "__main__":
         ]
     ]
 
+    block_placement_positions = []
+
     while len(wall_configuration) > 0:
         col = 0 # identifies which block we're placing in a given row
-        row_configuration = wall_configuration.pop()
+        row_configuration = wall_configuration.pop(0)
         logging.info(f'Row configuration: {row_configuration}')
         while len(row_configuration) > 0:
-            color_to_find = row_configuration.pop()
+            color_to_find = row_configuration.pop(0)
             T_block_world = get_block_position(fa, color_to_find)
 
             if not T_block_world:
@@ -210,6 +211,7 @@ if __name__ == "__main__":
             # T_grasp_world.translation[0] += cube_size/2
 
             T_place_world = calculate_pose(col, row)
+            block_placement_positions.append(T_place_world)
 
             # Pose closer to pick/place poses
             T_lift = RigidTransform(translation=[0, 0, cube_size*2], from_frame=T_ready_world.to_frame,
@@ -236,5 +238,14 @@ if __name__ == "__main__":
             col += 1
         
         row += 1
+
+    while block_placement_positions:
+        block_placement_position = block_placement_positions.pop()
+        T_grasp_world = get_closest_grasp_pose(block_placement_position, T_ready_world, cube_size)
+        T_lift_pick_world = T_lift * block_placement_position
+        perform_pick(fa, T_grasp_world, T_lift_pick_world, args.no_grasp)
+        fa.goto_pose(T_ready_world)
+        fa.open_gripper()
+
 
     exit(0)
