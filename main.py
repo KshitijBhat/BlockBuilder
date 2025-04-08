@@ -8,6 +8,7 @@ import rospy
 from visualization_msgs.msg import Marker, MarkerArray
 from autolab_core import RigidTransform, YamlConfig
 from frankapy import FrankaArm
+from time import sleep
 
 
 def subsample(data, rate=0.1):
@@ -43,7 +44,8 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world, cube_size):
 
 
 def perform_pick(fa, pick_pose, lift_pose, no_gripper):
-    fa.goto_gripper(0.05)
+#    fa.goto_gripper(0.05)
+    fa.open_gripper()
     fa.goto_pose(lift_pose)
     fa.goto_pose(pick_pose)
 
@@ -169,11 +171,13 @@ if __name__ == "__main__":
     wall_configuration = [
         [
             "yellow",
-            "blue"
+            "red",
+            "green",
         ],
         [
+            "green",
             "red",
-            "green"
+            "yellow",
         ]
     ]
 
@@ -185,15 +189,22 @@ if __name__ == "__main__":
             color_to_find = row_configuration.pop()
 
             fa.goto_pose(T_observe_pick_world)
+            sleep(1)
             T_block_world = get_block_by_color(color_to_find)
 
             if not T_block_world:
                 logging.error(f"{color_to_find} block not found, exiting.")
                 exit(2)
+            print(T_block_world)
 
+#            T_block_world.translation[0] += cube_size/2
+#            T_block_world.translation[1] -= cube_size/6
+
+            print(T_block_world)
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
             print(T_grasp_world)
+            T_grasp_world.translation[0] += cube_size/2
 
             T_place_world = calculate_pose(col, row)
 
