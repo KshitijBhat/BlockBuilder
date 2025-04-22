@@ -92,7 +92,7 @@ def get_all_visible_blocks():
     return rospy.wait_for_message('/world_marker_array', MarkerArray).markers
 
 
-def get_stable_visible_blocks(num_samples=50, delay=0.01, match_threshold=0.02):
+def get_stable_visible_blocks(num_samples=50, delay=0.001, match_threshold=0.02):
     """
     Collect multiple samples of visible blocks and average positions for what appear
     to be the same blocks based on spatial proximity.
@@ -359,16 +359,15 @@ if __name__ == "__main__":
 
             T_free_space = RigidTransform(
                 translation=free_space,
-                rotation=[
-                    [0, -1, 0], [-1, 0, 0], [0, 0, -1]
-                ],
+                rotation=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
                 from_frame='franka_tool',
                 to_frame='world'
             )
             T_free_space_lift = T_lift * T_free_space
-            perform_place(fa, T_free_space_lift, T_free_space_lift, args.no_grasp)
+            perform_place(fa, T_free_space, T_free_space_lift, args.no_grasp)
         else:
-            fa.open_gripper()
+            print(f"Unable to find any free space for cube size {cube_size}... Please reset by hand.")
+            exit(1)
 
         fa.goto_joints(ready_joints, duration=1.5)
 
