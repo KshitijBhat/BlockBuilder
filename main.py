@@ -18,26 +18,44 @@ def make_det_one(R):
 
 
 def get_closest_grasp_pose(T_tag_world, T_ee_world, cube_size):
-   tag_axes = [
-       T_tag_world.rotation[:, 0], -T_tag_world.rotation[:, 0],
-       T_tag_world.rotation[:, 1], -T_tag_world.rotation[:, 1]
-   ]
-   x_axis_ee = T_ee_world.rotation[:, 0]
-   dots = [axis.dot(x_axis_ee) for axis in tag_axes]
-   grasp_x_axis = tag_axes[np.argmax(dots)]
-   grasp_z_axis = np.array([0, 0, -1])
-   grasp_y_axis = np.cross(grasp_z_axis, grasp_x_axis)
-   grasp_R = make_det_one(np.c_[grasp_x_axis, grasp_y_axis, grasp_z_axis])
-    # Adjust cube size to match
-   translation_R = T_tag_world.translation.copy()
-   translation_R[-1] = cube_size/2
-   grasp_translation = (T_tag_world.translation + np.array([0, 0, -cube_size / 2]))
-   grasp_translation[-1] = cube_size/2
-   return RigidTransform(
-       rotation=grasp_R,
-       translation=translation_R,
-       from_frame=T_ee_world.from_frame, to_frame=T_ee_world.to_frame
-   )
+    z_grasp = np.array([0, 0, -1])  # Always top-down
+
+    def project_to_xy(v):
+        v_proj = v.copy()
+        v_proj[2] = 0
+        return v_proj / np.linalg.norm(v_proj)
+
+    cube_R = T_tag_world.rotation
+    ee_R = T_ee_world.rotation
+
+    # Cube's side directions
+    cube_axes = [cube_R[:, 0], -cube_R[:, 0], cube_R[:, 1], -cube_R[:, 1]]
+    cube_axes_proj = [project_to_xy(v) for v in cube_axes]
+
+    # EE X axis (in world frame)
+    ee_x = ee_R[:, 0]
+    ee_x_proj = project_to_xy(ee_x)
+
+    # Choose the cube axis that's closest in projection
+    dots = [ee_x_proj @ v for v in cube_axes_proj]
+    x_grasp = cube_axes_proj[np.argmax(dots)]
+
+    # Build orthonormal frame
+    y_grasp = np.cross(z_grasp, x_grasp)
+    x_grasp = np.cross(y_grasp, z_grasp)
+
+    grasp_R = np.c_[x_grasp, y_grasp, z_grasp]
+
+    # Grasp at top center of cube
+    grasp_translation = T_tag_world.translation.copy()
+    grasp_translation[2] = cube_size / 2
+
+    return RigidTransform(
+        rotation=make_det_one(grasp_R),
+        translation=grasp_translation,
+        from_frame=T_ee_world.from_frame,
+        to_frame=T_ee_world.to_frame
+    )
 
 
 def perform_pick(fa, pick_pose, lift_pose, no_gripper):
@@ -121,32 +139,33 @@ def get_stable_visible_blocks(num_samples=50, delay=0.01, match_threshold=0.02):
     ]
 
 
-def find_free_space(cube_size, visible_blocks):
+def find_free_space(cube_size):
     # Define the threshold distance for free space (i.e., at least cube_size apart in x and y)
     threshold = cube_size * 1.5  # Allowing a little padding around the cube
 
-    # TODO: Adjust to use new format from stable_visible_blocks
+    visible_blocks = get_stable_visible_blocks()
     # Iterate over each visible block and search for free space around it
-    for block_pos in visible_blocks:
+    for block in visible_blocks:
         # Check for a nearby empty space by trying surrounding positions in the XY plane
         for dx in [-threshold, 0, threshold]:
             for dy in [-threshold, 0, threshold]:
                 # TODO: We shouldn't search just neighbors, we should sample our picking area randomly
                 #  and detect whether there are blocks there.
                 # Candidate position in XY plane (keep Z the same)
+                block_pos = block["translation"]
                 print(f"Block_pos: {block_pos[:2]}")
-                candidate_pos = np.array(block_pos[:2]) + np.array([dx, dy])  # Only change x and y
+                candidate_pos = block_pos[:2] + np.array([dx, dy])  # Only change x and y
                 print(f"Candidate pos: {candidate_pos}")
 
                 # Ensure the candidate position is not too close to any other blocks in the XY plane
                 is_free = True
 
-                if block_pos[0] > 0.65 or block_pos[1] < -0.34 or block_pos[1] > -0.06:
+                if block_pos[0] > 0.65 or block_pos[0] < 0.34 or block_pos[1] < -0.34 or block_pos[1] > -0.06:
                     continue
 
                 for other_block in visible_blocks:
                     # TODO: We have to adjust this so that we're using the actual cube and not the center of the cube
-                    if np.linalg.norm(candidate_pos - np.array(other_block[:2])) < cube_size:
+                    if np.linalg.norm(candidate_pos - other_block["translation"][:2]) < cube_size:
                         is_free = False
                         break
 
@@ -326,32 +345,32 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerows(pick_stats[1:])
 
-    # while block_placement_positions:
-    #     block_placement_position = block_placement_positions.pop()
-    #     T_lift_pick_world = T_lift * block_placement_position
-    #     perform_pick(fa, block_placement_position, T_lift_pick_world, args.no_grasp)
-    #     fa.goto_joints(ready_joints, duration=1.5)
-    #     fa.goto_pose(T_observe_pick_world, duration=1.5)
-    #     blocks = get_stable_visible_blocks(num_samples=10)
-    #     i = 0
-    #     while not blocks and i < 50:
-    #         blocks = get_stable_visible_blocks(num_samples=10)
-    #         i += 1
-    #
-    #     print(blocks)
-    #     if (free_space := find_free_space(cube_size, blocks)) is not None:
-    #         print(f"Free space: {free_space}")
-    #         fa.goto_pose(RigidTransform(
-    #             translation=free_space,
-    #             rotation=[
-    #                 [0, -1, 0], [-1, 0, 0], [0, 0, -1]
-    #             ],
-    #             from_frame='franka_tool',
-    #             to_frame='world'
-    #         ))
-    #
-    #     fa.open_gripper()
-    #     fa.goto_joints(ready_joints, duration=1.5)
+    while block_placement_positions:
+        fa.goto_pose(T_observe_pick_world, duration=1.5)
+
+        if (free_space := find_free_space(cube_size)) is not None:
+            print(f"Free space: {free_space}")
+
+            block_placement_position = block_placement_positions.pop()
+            T_lift_pick_world = T_lift * block_placement_position
+            fa.goto_joints(ready_joints, duration=1.5)
+            perform_pick(fa, block_placement_position, T_lift_pick_world, args.no_grasp)
+            fa.goto_joints(ready_joints, duration=1.5)
+
+            T_free_space = RigidTransform(
+                translation=free_space,
+                rotation=[
+                    [0, -1, 0], [-1, 0, 0], [0, 0, -1]
+                ],
+                from_frame='franka_tool',
+                to_frame='world'
+            )
+            T_free_space_lift = T_lift * T_free_space
+            perform_place(fa, T_free_space_lift, T_free_space_lift, args.no_grasp)
+        else:
+            fa.open_gripper()
+
+        fa.goto_joints(ready_joints, duration=1.5)
 
 
     exit(0)
