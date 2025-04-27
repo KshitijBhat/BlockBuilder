@@ -63,7 +63,8 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world, cube_size):
 
     grasp_quat = grasp_pose.quaternion.copy()
     block_quat = T_tag_world.quaternion.copy()
-    if block_quat[0] > .80:
+    if block_quat[0] > .80 and block_quat[0] < .95:
+        print(f"{block_quat[0]} > .80 and < .95")
         grasp_quat[2] = -.3960
     else:
         grasp_quat[2] = 0
@@ -179,7 +180,7 @@ def find_free_space(cube_size):
                 candidate_pos = block_pos[:2] + np.array([dx, dy])  # Only change x and y
                 print(f"Candidate pos: {candidate_pos}")
 
-                if (candidate_pos[0] > 0.65 or candidate_pos[0] < 0.34 or candidate_pos[1] < -0.34
+                if (candidate_pos[0] > 0.60 or candidate_pos[0] < 0.34 or candidate_pos[1] < -0.34
                         or candidate_pos[1] > -0.06):
                     continue
 
@@ -296,11 +297,9 @@ if __name__ == "__main__":
     # print(wall_configuration)
 
     wall_configuration = [
-#        ["red", "red", "red", "red"],
-#        ["green", "green", "blue", "red"],
-#        ["blue", "red", "blue", "green"],
-#        ["green", "green", "blue", "blue"]
-        ["red", "red", "red"]
+        ["red", "red", "blue"],
+        ["red", "green", "blue"],
+        ["red", "blue", "blue"]
     ]
 
     block_placement_positions = []
@@ -310,7 +309,7 @@ if __name__ == "__main__":
         ["color", "pick_success", "x", "y", "row-col-configuration_type"]
     ]
 
-    configuration_type = "2-1-red-green"
+    configuration_type = "3-3-red-green-blue"
 
     while len(wall_configuration) > 0:
         col = 0  # identifies which block we're placing in a given row
