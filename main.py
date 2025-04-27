@@ -9,6 +9,8 @@ from visualization_msgs.msg import Marker, MarkerArray
 from autolab_core import RigidTransform, YamlConfig
 from frankapy import FrankaArm
 from time import sleep
+
+
 # from extract_color import extract
 
 
@@ -71,7 +73,7 @@ def perform_pick(fa, pick_pose, lift_pose, no_gripper):
 
 def calculate_pose(col, row):
     place_pose = RigidTransform(
-        translation=[0.54875245, 0.11862949 + col * 0.06, 0.01705035 + row*0.05],
+        translation=[0.54875245, 0.11862949 + col * 0.06, 0.01705035 + row * 0.05],
         rotation=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
         from_frame="franka_tool",
         to_frame="world")
@@ -92,7 +94,7 @@ def get_all_visible_blocks():
     return rospy.wait_for_message('/world_marker_array', MarkerArray).markers
 
 
-def get_stable_visible_blocks(num_samples=50, delay=0.001, match_threshold=0.02):
+def get_stable_visible_blocks(num_samples=100, match_threshold=0.02):
     """
     Collect multiple samples of visible blocks and average positions for what appear
     to be the same blocks based on spatial proximity.
@@ -105,7 +107,8 @@ def get_stable_visible_blocks(num_samples=50, delay=0.001, match_threshold=0.02)
     for _ in range(num_samples):
         for marker in get_all_visible_blocks():
             pos = np.array([marker.pose.position.x, marker.pose.position.y, marker.pose.position.z])
-            quat = np.array([marker.pose.orientation.x, marker.pose.orientation.y, marker.pose.orientation.z, marker.pose.orientation.w])
+            quat = np.array([marker.pose.orientation.x, marker.pose.orientation.y, marker.pose.orientation.z,
+                             marker.pose.orientation.w])
 
             matched = False
             for group in block_groups:
@@ -126,22 +129,25 @@ def get_stable_visible_blocks(num_samples=50, delay=0.001, match_threshold=0.02)
                     }
                 )
 
-        rospy.sleep(delay)
-
     # Average positions in each group
-    return [
-        {
-            "color": group["color"],
-            "translation": np.mean(group["translations"], axis=0),
-            "quaternion": np.mean(group["quaternions"], axis=0)
-        }
-        for group in block_groups
-    ]
+    updated_block_groups = []
+    for group in block_groups:
+        # Only worry about this block if it's seen in over 20% of the samples
+        if len(group["translations"]) / num_samples > .2:
+            updated_block_groups.append(
+                {
+                    "color": group["color"],
+                    "translation": np.mean(group["translations"], axis=0),
+                    "quaternion": np.mean(group["quaternions"], axis=0)
+                }
+            )
+
+    return updated_block_groups
 
 
 def find_free_space(cube_size):
     # Define the threshold distance for free space (i.e., at least cube_size apart in x and y)
-    threshold = cube_size * 1.5  # Allowing a little padding around the cube
+    threshold = cube_size * 1.75  # Allowing a little padding around the cube
 
     visible_blocks = get_stable_visible_blocks()
     # Iterate over each visible block and search for free space around it
@@ -157,12 +163,12 @@ def find_free_space(cube_size):
                 candidate_pos = block_pos[:2] + np.array([dx, dy])  # Only change x and y
                 print(f"Candidate pos: {candidate_pos}")
 
-                # Ensure the candidate position is not too close to any other blocks in the XY plane
-                is_free = True
-
-                if block_pos[0] > 0.65 or block_pos[0] < 0.34 or block_pos[1] < -0.34 or block_pos[1] > -0.06:
+                if (candidate_pos[0] > 0.65 or candidate_pos[0] < 0.34 or candidate_pos[1] < -0.34
+                        or candidate_pos[1] > -0.06):
                     continue
 
+                # Ensure the candidate position is not too close to any other blocks in the XY plane
+                is_free = True
                 for other_block in visible_blocks:
                     # TODO: We have to adjust this so that we're using the actual cube and not the center of the cube
                     if np.linalg.norm(candidate_pos - other_block["translation"][:2]) < cube_size:
@@ -183,8 +189,8 @@ def color_matches(marker_color, target_color, threshold=0.7):
             abs(marker_color[2] - target_color[2]) < threshold)
 
 
-def get_block_position(fa, color_to_find, duration=1.5):
-    fa.goto_pose(T_observe_pick_world, duration=duration)
+def get_block_position(fa, color_to_find):
+    fa.goto_pose(T_observe_pick_world, duration=2)
     sleep(1)
     return get_block_by_color(color_to_find)
 
@@ -261,7 +267,7 @@ if __name__ == "__main__":
 
     # Pose for observing the picking area
     T_observe_pick_world = RigidTransform(
-        translation=[0.50688894, -0.23398067, 0.47516064],
+        translation=[0.5119, -0.1437, 0.6182],
         rotation=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
         from_frame='franka_tool',
         to_frame='world'
@@ -274,8 +280,10 @@ if __name__ == "__main__":
     # print(wall_configuration)
 
     wall_configuration = [
-        ["red"],
-        ["green"],
+        ["red", "red", "red", "red"],
+        ["green", "green", "blue", "red"],
+        ["blue", "red", "blue", "green"],
+        ["green", "green", "blue", "blue"]
     ]
 
     block_placement_positions = []
@@ -288,7 +296,7 @@ if __name__ == "__main__":
     configuration_type = "2-1-red-green"
 
     while len(wall_configuration) > 0:
-        col = 0 # identifies which block we're placing in a given row
+        col = 0  # identifies which block we're placing in a given row
         row_configuration = wall_configuration.pop(0)
         logging.info(f'Row configuration: {row_configuration}')
         while len(row_configuration) > 0:
@@ -303,8 +311,8 @@ if __name__ == "__main__":
 
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_observe_pick_world, cube_size)
-            T_grasp_world.translation[0] += cube_size/4
-            T_grasp_world.translation[1] += cube_size/6
+            T_grasp_world.translation[0] += cube_size / 4
+            T_grasp_world.translation[1] += cube_size / 6
 
             grasp_quat = T_grasp_world.quaternion.copy()
             block_quat = T_block_world.quaternion.copy()
@@ -324,13 +332,15 @@ if __name__ == "__main__":
             while pick_failure:
                 perform_pick(fa, T_grasp_world, T_lift_pick_world, args.no_grasp)
                 pick_failure = fa.get_gripper_width() < 0.004
-                pick_stats.append([color_to_find, not pick_failure, T_block_world.translation[0], T_block_world.translation[1], configuration_type])
+                pick_stats.append(
+                    [color_to_find, not pick_failure, T_block_world.translation[0], T_block_world.translation[1],
+                     configuration_type])
 
                 if num_pick_attempts == 0 or not pick_failure:
                     break
 
                 num_pick_attempts -= 1
-                T_block_world = get_block_position(fa, color_to_find, duration=2)
+                T_block_world = get_block_position(fa, color_to_find)
                 T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
                 T_lift_pick_world = T_lift * T_grasp_world
 
@@ -346,7 +356,7 @@ if __name__ == "__main__":
         writer.writerows(pick_stats[1:])
 
     while block_placement_positions:
-        fa.goto_pose(T_observe_pick_world, duration=1.5)
+        fa.goto_pose(T_observe_pick_world, duration=2)
 
         if (free_space := find_free_space(cube_size)) is not None:
             print(f"Free space: {free_space}")
@@ -370,6 +380,5 @@ if __name__ == "__main__":
             exit(1)
 
         fa.goto_joints(ready_joints, duration=1.5)
-
 
     exit(0)
