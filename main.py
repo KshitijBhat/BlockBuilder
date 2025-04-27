@@ -51,13 +51,27 @@ def get_closest_grasp_pose(T_tag_world, T_ee_world, cube_size):
     # Grasp at top center of cube
     grasp_translation = T_tag_world.translation.copy()
     grasp_translation[2] = cube_size / 2
+    grasp_translation[0] += cube_size / 4
+    grasp_translation[1] += cube_size / 6
 
-    return RigidTransform(
+    grasp_pose = RigidTransform(
         rotation=make_det_one(grasp_R),
         translation=grasp_translation,
         from_frame=T_ee_world.from_frame,
         to_frame=T_ee_world.to_frame
     )
+
+    grasp_quat = grasp_pose.quaternion.copy()
+    block_quat = T_tag_world.quaternion.copy()
+    if block_quat[0] > .80:
+        grasp_quat[2] = -.3960
+    else:
+        grasp_quat[2] = 0
+
+    grasp_pose.rotation = RigidTransform.rotation_from_quaternion(grasp_quat)
+    print(f"calculated grasp pose: \n{grasp_pose}")
+
+    return grasp_pose
 
 
 def perform_pick(fa, pick_pose, lift_pose, no_gripper):
@@ -314,14 +328,6 @@ if __name__ == "__main__":
 
             # Get grasp pose
             T_grasp_world = get_closest_grasp_pose(T_block_world, T_observe_pick_world, cube_size)
-            T_grasp_world.translation[0] += cube_size / 4
-            T_grasp_world.translation[1] += cube_size / 6
-
-            grasp_quat = T_grasp_world.quaternion.copy()
-            block_quat = T_block_world.quaternion.copy()
-            grasp_quat[2] = block_quat[0]
-            T_grasp_world.rotation = RigidTransform.rotation_from_quaternion(grasp_quat)
-            print(f"calculated grasp pose: \n{T_grasp_world}")
 
             T_place_world = calculate_pose(col, row)
             block_placement_positions.append(T_place_world)
@@ -346,6 +352,10 @@ if __name__ == "__main__":
                 T_block_world = get_block_position(fa, color_to_find)
                 T_grasp_world = get_closest_grasp_pose(T_block_world, T_ready_world, cube_size)
                 T_lift_pick_world = T_lift * T_grasp_world
+
+            if pick_failure:
+                print(f"Failed to pick {color_to_find} block")
+                exit(1)
 
             fa.goto_joints(ready_joints, duration=1.5)
             perform_place(fa, T_place_world, T_lift_place_world, args.no_grasp)
