@@ -267,8 +267,8 @@ if __name__ == "__main__":
 
     # Pose for observing the picking area
     T_observe_pick_world = RigidTransform(
-        translation=[0.5119, -0.1437, 0.6182],
-        rotation=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
+        translation=[0.5865, -0.2208, 0.4594],
+        rotation=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
         from_frame='franka_tool',
         to_frame='world'
     )
@@ -280,10 +280,11 @@ if __name__ == "__main__":
     # print(wall_configuration)
 
     wall_configuration = [
-        ["red", "red", "red", "red"],
-        ["green", "green", "blue", "red"],
-        ["blue", "red", "blue", "green"],
-        ["green", "green", "blue", "blue"]
+#        ["red", "red", "red", "red"],
+#        ["green", "green", "blue", "red"],
+#        ["blue", "red", "blue", "green"],
+#        ["green", "green", "blue", "blue"]
+        ["red", "blue"]
     ]
 
     block_placement_positions = []
