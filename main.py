@@ -73,7 +73,7 @@ def perform_pick(fa, pick_pose, lift_pose, no_gripper):
 
 def calculate_pose(col, row):
     place_pose = RigidTransform(
-        translation=[0.54875245, 0.11862949 + col * 0.06, 0.01705035 + row * 0.05],
+        translation=[0.54875245, 0.11862949 + col * 0.065, 0.01705035 + row * 0.05],
         rotation=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
         from_frame="franka_tool",
         to_frame="world")
@@ -94,7 +94,7 @@ def get_all_visible_blocks():
     return rospy.wait_for_message('/world_marker_array', MarkerArray).markers
 
 
-def get_stable_visible_blocks(num_samples=100, match_threshold=0.02):
+def get_stable_visible_blocks(num_samples=50, match_threshold=0.02, delay=0.01, accuracy_threshold=0.2):
     """
     Collect multiple samples of visible blocks and average positions for what appear
     to be the same blocks based on spatial proximity.
@@ -129,11 +129,13 @@ def get_stable_visible_blocks(num_samples=100, match_threshold=0.02):
                     }
                 )
 
+            rospy.sleep(delay)
+
     # Average positions in each group
     updated_block_groups = []
     for group in block_groups:
         # Only worry about this block if it's seen in over 20% of the samples
-        if len(group["translations"]) / num_samples > .2:
+        if len(group["translations"]) / num_samples > accuracy_threshold:
             updated_block_groups.append(
                 {
                     "color": group["color"],
@@ -149,7 +151,7 @@ def find_free_space(cube_size):
     # Define the threshold distance for free space (i.e., at least cube_size apart in x and y)
     threshold = cube_size * 1.75  # Allowing a little padding around the cube
 
-    visible_blocks = get_stable_visible_blocks()
+    visible_blocks = get_stable_visible_blocks(num_samples=100, accuracy_threshold=0.05)
     # Iterate over each visible block and search for free space around it
     for block in visible_blocks:
         # Check for a nearby empty space by trying surrounding positions in the XY plane
@@ -267,7 +269,7 @@ if __name__ == "__main__":
 
     # Pose for observing the picking area
     T_observe_pick_world = RigidTransform(
-        translation=[0.5865, -0.2208, 0.4594],
+        translation=[0.5237, -0.18814, 0.4477],
         rotation=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
         from_frame='franka_tool',
         to_frame='world'
@@ -284,7 +286,7 @@ if __name__ == "__main__":
 #        ["green", "green", "blue", "red"],
 #        ["blue", "red", "blue", "green"],
 #        ["green", "green", "blue", "blue"]
-        ["red", "blue"]
+        ["red", "red", "red"]
     ]
 
     block_placement_positions = []
