@@ -36,14 +36,14 @@
 ## Results
 
 <div align="center">
-  <img src="/assets/color_success.png" width="300" alt="Result 1" />
+  <img src="/assets/color_success.png" width="640" alt="Result 1" />
   <p><em>Picking success by color</em></p>
 </div>
 
 <div align="center">
-  <img src="/assets/x_pose_success.png" width="300" alt="Result 2" />
+  <img src="/assets/x_pose_success.png" width="640" alt="Result 2" />
   <p><em>Picking success by block position in X</em></p>
-  <img src="/assets/success_y.png" width="300" alt="Result 3" />
+  <img src="/assets/success_y.png" width="640" alt="Result 3" />
   <p><em>Picking success by block position in Y</em></p>
 </div>
 
